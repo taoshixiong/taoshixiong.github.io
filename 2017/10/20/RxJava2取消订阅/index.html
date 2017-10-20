@@ -6,14 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="">
-  <title>Tag: 主题 | Taosx的博客</title>
+  <title>RxJava2取消订阅 | Taosx的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Taosx的博客">
-<meta property="og:url" content="/tags/主题/index.html">
+  <meta name="description" content="RxJava2取消订阅 Retrofit2 + OkHttp + Rxjava2 在 Android 中无疑是一个最好的搭配，然而最近项目中遇到一个问题，在网络请求进行中，并且 Activity 关闭后，会出现如下异常   Caused by: java.lang.IllegalStateException: Fragment xxxxFragment{xxxx} not attached to">
+<meta name="keywords" content="Android,RxJava">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RxJava2取消订阅">
+<meta property="og:url" content="/2017/10/20/RxJava2取消订阅/index.html">
 <meta property="og:site_name" content="Taosx的博客">
+<meta property="og:description" content="RxJava2取消订阅 Retrofit2 + OkHttp + Rxjava2 在 Android 中无疑是一个最好的搭配，然而最近项目中遇到一个问题，在网络请求进行中，并且 Activity 关闭后，会出现如下异常   Caused by: java.lang.IllegalStateException: Fragment xxxxFragment{xxxx} not attached to">
+<meta property="og:updated_time" content="2017-10-20T06:20:39.690Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Taosx的博客">
+<meta name="twitter:title" content="RxJava2取消订阅">
+<meta name="twitter:description" content="RxJava2取消订阅 Retrofit2 + OkHttp + Rxjava2 在 Android 中无疑是一个最好的搭配，然而最近项目中遇到一个问题，在网络请求进行中，并且 Activity 关闭后，会出现如下异常   Caused by: java.lang.IllegalStateException: Fragment xxxxFragment{xxxx} not attached to">
   
   
     <link rel="icon" href="/assets/img/favicon.png">
@@ -151,64 +156,165 @@ var _hmt = _hmt || [];
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-RxJava2取消订阅" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2015" class="archive-year">2015</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2015/02/23/test/" class="archive-article-date">
-  	<time datetime="2015-02-23T04:58:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2015-02-23</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2015/02/23/test/">hexo主题Yilia在移动端适配的一些事</a>
+    <h1 class="article-title" itemprop="name">
+      RxJava2取消订阅
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2017/10/20/RxJava2取消订阅/" class="archive-article-date">
+  	<time datetime="2017-10-20T06:18:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="RxJava2取消订阅"><a href="#RxJava2取消订阅" class="headerlink" title="RxJava2取消订阅"></a>RxJava2取消订阅</h1><blockquote>
+<p>Retrofit2 + OkHttp + Rxjava2 在 Android 中无疑是一个最好的搭配，然而最近项目中遇到一个问题，在网络请求进行中，并且 Activity 关闭后，会出现如下异常</p>
+</blockquote>
+<ul>
+<li>Caused by: java.lang.IllegalStateException: Fragment xxxxFragment{xxxx} not attached to Activity</li>
+</ul>
+<blockquote>
+<p>原因的话如异常所示，所以分析之后最终想在关闭界面的时候取消调 RxJava2 的订阅</p>
+<p>在 Observer<t> ，其源码如下</t></p>
+</blockquote>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="attribute">public</span> interface Observer&lt;T&gt; &#123;</div><div class="line"></div><div class="line">    <span class="attribute">void</span> <span class="literal">on</span>Subscribe(<span class="variable">@NonNull</span> Disposable d);</div><div class="line"></div><div class="line">    <span class="attribute">void</span> <span class="literal">on</span>Next(<span class="variable">@NonNull</span> T t);</div><div class="line"></div><div class="line">    <span class="attribute">void</span> <span class="literal">on</span>Error(<span class="variable">@NonNull</span> Throwable e);</div><div class="line"></div><div class="line">    <span class="attribute">void</span> <span class="literal">on</span>Complete();</div></pre></td></tr></table></figure>
+<blockquote>
+<p>发现 onSubscribe 中参数 Disposable，当 Observer (观察者)与 Observable (被观察者)通过 subscribe() 建立连接后，事件可以进行传递。当发生一些其他情况，不得不断开两者之间的连接时，该怎么操作?这个时候就该 Disposable 上场了。</p>
+</blockquote>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">public<span class="built_in"> interface </span>Disposable &#123;</div><div class="line">    </div><div class="line">    void dispose();</div><div class="line"></div><div class="line">    boolean isDisposed();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<blockquote>
+<p>其中有个 dispose() 的方法，通过此方法切断 Observer 与 Observable 的连接。<br><figure class="highlight less"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="selector-tag">Observable</span><span class="selector-class">.create</span>(new ObservableOnSubscribe&lt;String&gt;() &#123;</div><div class="line">            <span class="variable">@Override</span></div><div class="line">            public void subscribe(<span class="variable">@NonNull</span> ObservableEmitter&lt;String&gt; e) throws Exception &#123;</div><div class="line"></div><div class="line">            &#125;</div><div class="line">        &#125;)<span class="selector-class">.observeOn</span>(Schedulers.io())</div><div class="line">                <span class="selector-class">.observeOn</span>(AndroidSchedulers.mainThread())</div><div class="line">                <span class="selector-class">.subscribe</span>(new Observer&lt;String&gt;() &#123;</div><div class="line">                    <span class="variable">@Override</span></div><div class="line">                    public void onSubscribe(<span class="variable">@NonNull</span> Disposable d) &#123;</div><div class="line">                        <span class="selector-tag">d</span><span class="selector-class">.dispose</span>();<span class="comment">//实现断开Observer 与 Observable 的连接</span></div><div class="line">                    &#125;</div><div class="line"></div><div class="line">                    @<span class="selector-tag">Override</span></div><div class="line">                    <span class="selector-tag">public</span> <span class="selector-tag">void</span> <span class="selector-tag">onNext</span>(<span class="variable">@NonNull</span> String s) &#123;</div><div class="line">                        <span class="selector-tag">Log</span><span class="selector-class">.i</span>(<span class="string">"Msg:"</span>, s);</div><div class="line">                    &#125;</div><div class="line"></div><div class="line">                    @<span class="selector-tag">Override</span></div><div class="line">                    <span class="selector-tag">public</span> <span class="selector-tag">void</span> <span class="selector-tag">onError</span>(<span class="variable">@NonNull</span> Throwable e) &#123;</div><div class="line"></div><div class="line">                    &#125;</div><div class="line"></div><div class="line">                    <span class="variable">@Override</span></div><div class="line">                    public void onComplete() &#123;</div><div class="line"></div><div class="line">                    &#125;</div><div class="line">                &#125;);</div></pre></td></tr></table></figure></p>
+</blockquote>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">hexo</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">主题</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">RxJava</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="http://s.jiathis.com/qrcode.php?url=http:/2017/10/20/RxJava2取消订阅/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2015/02/23/test/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">hexo主题Yilia在移动端适配的一些事</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
 
 
           </div>
@@ -231,9 +337,9 @@ var _hmt = _hmt || [];
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: true,
 		toc_hide_index: true,

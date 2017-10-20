@@ -153,6 +153,101 @@ var _hmt = _hmt || [];
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-RxJava2取消订阅" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/10/20/RxJava2取消订阅/">RxJava2取消订阅</a>
+    </h1>
+  
+
+        
+        <a href="/2017/10/20/RxJava2取消订阅/" class="archive-article-date">
+  	<time datetime="2017-10-20T06:18:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-10-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="RxJava2取消订阅"><a href="#RxJava2取消订阅" class="headerlink" title="RxJava2取消订阅"></a>RxJava2取消订阅</h1><blockquote>
+<p>Retrofit2 + OkHttp + Rxjava2 在 Android 中无疑是一个最好的搭配，然而最近项目中遇到一个问题，在网络请求进行中，并且 Activity 关闭后，会出现如下异常</p>
+</blockquote>
+<ul>
+<li>Caused by: java.lang.IllegalStateException: Fragment xxxxFragment{xxxx} not attached to Activity</li>
+</ul>
+<blockquote>
+<p>原因的话如异常所示，所以分析之后最终想在关闭界面的时候取消调 RxJava2 的订阅</p>
+<p>在 Observer<t> ，其源码如下</t></p>
+</blockquote>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="attribute">public</span> interface Observer&lt;T&gt; &#123;</div><div class="line"></div><div class="line">    <span class="attribute">void</span> <span class="literal">on</span>Subscribe(<span class="variable">@NonNull</span> Disposable d);</div><div class="line"></div><div class="line">    <span class="attribute">void</span> <span class="literal">on</span>Next(<span class="variable">@NonNull</span> T t);</div><div class="line"></div><div class="line">    <span class="attribute">void</span> <span class="literal">on</span>Error(<span class="variable">@NonNull</span> Throwable e);</div><div class="line"></div><div class="line">    <span class="attribute">void</span> <span class="literal">on</span>Complete();</div></pre></td></tr></table></figure>
+<blockquote>
+<p>发现 onSubscribe 中参数 Disposable，当 Observer (观察者)与 Observable (被观察者)通过 subscribe() 建立连接后，事件可以进行传递。当发生一些其他情况，不得不断开两者之间的连接时，该怎么操作?这个时候就该 Disposable 上场了。</p>
+</blockquote>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">public<span class="built_in"> interface </span>Disposable &#123;</div><div class="line">    </div><div class="line">    void dispose();</div><div class="line"></div><div class="line">    boolean isDisposed();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<blockquote>
+<p>其中有个 dispose() 的方法，通过此方法切断 Observer 与 Observable 的连接。<br><figure class="highlight less"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="selector-tag">Observable</span><span class="selector-class">.create</span>(new ObservableOnSubscribe&lt;String&gt;() &#123;</div><div class="line">            <span class="variable">@Override</span></div><div class="line">            public void subscribe(<span class="variable">@NonNull</span> ObservableEmitter&lt;String&gt; e) throws Exception &#123;</div><div class="line"></div><div class="line">            &#125;</div><div class="line">        &#125;)<span class="selector-class">.observeOn</span>(Schedulers.io())</div><div class="line">                <span class="selector-class">.observeOn</span>(AndroidSchedulers.mainThread())</div><div class="line">                <span class="selector-class">.subscribe</span>(new Observer&lt;String&gt;() &#123;</div><div class="line">                    <span class="variable">@Override</span></div><div class="line">                    public void onSubscribe(<span class="variable">@NonNull</span> Disposable d) &#123;</div><div class="line">                        <span class="selector-tag">d</span><span class="selector-class">.dispose</span>();<span class="comment">//实现断开Observer 与 Observable 的连接</span></div><div class="line">                    &#125;</div><div class="line"></div><div class="line">                    @<span class="selector-tag">Override</span></div><div class="line">                    <span class="selector-tag">public</span> <span class="selector-tag">void</span> <span class="selector-tag">onNext</span>(<span class="variable">@NonNull</span> String s) &#123;</div><div class="line">                        <span class="selector-tag">Log</span><span class="selector-class">.i</span>(<span class="string">"Msg:"</span>, s);</div><div class="line">                    &#125;</div><div class="line"></div><div class="line">                    @<span class="selector-tag">Override</span></div><div class="line">                    <span class="selector-tag">public</span> <span class="selector-tag">void</span> <span class="selector-tag">onError</span>(<span class="variable">@NonNull</span> Throwable e) &#123;</div><div class="line"></div><div class="line">                    &#125;</div><div class="line"></div><div class="line">                    <span class="variable">@Override</span></div><div class="line">                    public void onComplete() &#123;</div><div class="line"></div><div class="line">                    &#125;</div><div class="line">                &#125;);</div></pre></td></tr></table></figure></p>
+</blockquote>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Android</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">RxJava</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2017/10/20/RxJava2取消订阅/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-test" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -324,6 +419,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
             <input type="checkbox" q-on="click:toggleTag(e)" q-attr="checked:showTags">
           </label>
           <ul class="article-tag-list" q-show="showTags">
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Android</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">RxJava</a>
+              </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">hexo</a>
